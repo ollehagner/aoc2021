@@ -9,7 +9,7 @@ fun main() {
             .map { values -> Pair(values.first().toInt(), values.last().toInt()) }
             .filter { pair -> pair.first < pair.second }
             .count();
-        println("Got $count increases")
+        println("Day 1 part 1. Got $count increases")
 
     }
 
@@ -22,13 +22,13 @@ fun main() {
                 .map { values -> Pair(values.first(), values.last()) }
                 .filter { pair -> pair.first < pair.second }
             .count()
-        println("Got $count increases")
+        println("Day 1 part 2. Got $count increases")
     }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("day1/Day01_test")
     val input = readInput("day1/Day01")
 
-//    part1(input)
+    part1(input)
     part2(input)
 }
