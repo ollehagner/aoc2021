@@ -8,7 +8,7 @@ fun main() {
         val count = input.windowed(2)
             .map { values -> Pair(values.first().toInt(), values.last().toInt()) }
             .filter { pair -> pair.first < pair.second }
-            .count();
+            .count()
         println("Day 1 part 1. Got $count increases")
 
     }
@@ -18,14 +18,13 @@ fun main() {
             .map(String::toInt)
             .windowed(3)
             .map { values -> values.sum() }
-                .windowed(2)
-                .map { values -> Pair(values.first(), values.last()) }
-                .filter { pair -> pair.first < pair.second }
+            .windowed(2)
+            .map { values -> Pair(values.first(), values.last()) }
+            .filter { pair -> pair.first < pair.second }
             .count()
         println("Day 1 part 2. Got $count increases")
     }
 
-    // test if implementation meets criteria from the description, like:
     val testInput = readInput("day1/Day01_test")
     val input = readInput("day1/Day01")
 
