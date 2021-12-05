@@ -6,8 +6,6 @@ import java.util.*
 class Grid<T> {
 
 
-    constructor()
-
     val data = mutableMapOf<Point, T>()
 
     fun values(): MutableCollection<T> {
