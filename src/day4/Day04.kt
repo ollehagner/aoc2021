@@ -14,7 +14,7 @@ fun main() {
             val potentialBingoBoard = boards.find { it.hasBingo()}
             if(potentialBingoBoard != null) {
                 println("Day 4 part 1. Score is ${potentialBingoBoard.score() * number}")
-                break;
+                break
             }
         }
     }
