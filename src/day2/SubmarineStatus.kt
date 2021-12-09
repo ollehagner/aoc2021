@@ -1,12 +1,14 @@
 package day2
 
+
+
 class SubmarineStatus(val position: Position, private val aim: Int) {
 
     fun executeCommand(command: Command): SubmarineStatus {
         when(command.direction) {
-            Direction.UP -> return SubmarineStatus(position, aim - command.magnitude)
-            Direction.DOWN -> return SubmarineStatus(position, aim + command.magnitude)
-            Direction.FORWARD -> return SubmarineStatus(position.move(Direction.FORWARD, command.magnitude).move(Direction.DOWN, aim * command.magnitude), aim)
+            SubmarineDirection.UP -> return SubmarineStatus(position, aim - command.magnitude)
+            SubmarineDirection.DOWN -> return SubmarineStatus(position, aim + command.magnitude)
+            SubmarineDirection.FORWARD -> return SubmarineStatus(position.move(SubmarineDirection.FORWARD, command.magnitude).move(SubmarineDirection.DOWN, aim * command.magnitude), aim)
         }
     }
 

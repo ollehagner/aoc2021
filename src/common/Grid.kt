@@ -8,20 +8,46 @@ class Grid<T> {
 
     val data = mutableMapOf<Point, T>()
 
+    constructor() {
+
+    }
+
+    constructor(values: List<List<T>>) {
+        values.forEachIndexed { y, row ->
+            row.forEachIndexed { x, value ->
+                data[Point(x, y)] = value
+            }
+        }
+    }
+
+    fun allPoints() : Set<Point> {
+        return data.keys.toSet()
+    }
+
     fun values(): MutableCollection<T> {
         return data.values
     }
 
-    fun get(point: Point): T {
+    fun valueOf(point: Point): T {
         return data[point]!!
     }
 
-    fun getOrDefault(point: Point, defaultValue: T): T {
+    fun valueOrDefault(point: Point, defaultValue: T): T {
         return data.getOrDefault(point, defaultValue)
     }
 
-    fun maybeGet(point: Point): T? {
+    fun maybeValue(point: Point): T? {
         return data[point]
+    }
+
+    fun hasValue(point: Point): Boolean {
+        return data.containsKey(point)
+    }
+
+    fun valueOfExistingPoints(points: List<Point>) : List<T> {
+        return points
+            .map { maybeValue(it) }
+            .filterNotNull()
     }
 
     fun set(point: Point, value: T) {
@@ -34,7 +60,7 @@ class Grid<T> {
         return IntRange(min.y, max.y)
                 .map { y ->
                     IntRange(min.x, max.x)
-                            .map { x -> get(Point(x, y)) }
+                            .map { x -> valueOf(Point(x, y)) }
 
                 }
     }
@@ -45,7 +71,7 @@ class Grid<T> {
         return IntRange(min.x, max.x)
                 .map { x ->
                     IntRange(min.y, max.y)
-                            .map { y -> get(Point(x, y)) }
+                            .map { y -> valueOf(Point(x, y)) }
 
                 }
     }
@@ -70,7 +96,7 @@ class Grid<T> {
         val maxY = Optional.ofNullable(data.keys.map { it.y }.maxOf { it }).orElse(0)
         (minY)!!.rangeTo(maxY!!).forEach { y ->
             (minX)!!.rangeTo(maxX!!).forEach { x ->
-                sb.append(get(Point(x, y)).toString())
+                sb.append(valueOf(Point(x, y)).toString())
             }
             sb.append("\n")
         }
