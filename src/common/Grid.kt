@@ -20,6 +20,10 @@ class Grid<T> {
         }
     }
 
+    fun size(): Int {
+        return data.size
+    }
+
     fun allPoints() : Set<Point> {
         return data.keys.toSet()
     }
