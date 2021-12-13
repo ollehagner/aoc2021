@@ -6,6 +6,8 @@ import kotlin.collections.HashSet
 
 
 fun main() {
+
+
     fun findDistinctPaths(caves: Set<Cave>, validPathPredicate: (List<Cave>) -> Boolean): Set<LinkedList<Cave>> {
         val firstPath = LinkedList<Cave>().apply { add(caves.first { it.name == "start" }) }
         val pathsToExplore = LinkedList<LinkedList<Cave>>().apply { add(firstPath) }
@@ -13,24 +15,17 @@ fun main() {
 
         while(pathsToExplore.isNotEmpty()) {
             val path = pathsToExplore.pop()!!
-//            pathsToExplore.forEach { println(it)}
-//            println("--------------------------")
             if(path.last.isEnd()) {
                 distinctPaths.add(path)
             } else {
                 path.last().connections
-                    .map { connection ->
-                       LinkedList<Cave>().apply {
-                            addAll(path)
-                            addLast(connection)
-                        }
+                    .map { path.copyAndAdd(it)
                     }
                     .filter { validPathPredicate(it) }
-                    .forEach {
-                        pathsToExplore.add(it)
+                    .forEach { newPathToExplore ->
+                        pathsToExplore.add(newPathToExplore)
                     }
             }
-
         }
         return distinctPaths
     }
@@ -49,10 +44,13 @@ fun main() {
 
     fun part2(caves: Set<Cave>) {
         val validPathPredicate = { path: List<Cave> ->
-            val smallCavesVisitedMoreThanOnce = path.groupingBy { it }
+            val visitsToStartCave = path.count { it.isStart() }
+            val smallCavesVisitedMoreThanOnce = path
+                .filter { !it.isStart() }
+                .groupingBy { it }
                 .eachCount()
                 .filter { (cave, visits) -> cave.isSmallCave() && visits >= 2 }
-             smallCavesVisitedMoreThanOnce.size <= 1 && smallCavesVisitedMoreThanOnce.values.sum() <= 2 && smallCavesVisitedMoreThanOnce.keys.none { it.name == "start" }
+             smallCavesVisitedMoreThanOnce.size <= 1 && smallCavesVisitedMoreThanOnce.values.sum() <= 2 && visitsToStartCave == 1
         }
         val distinctPaths = findDistinctPaths(caves, validPathPredicate)
         println("Day 12 part 2. Distinct paths: ${distinctPaths.size}")
@@ -86,6 +84,12 @@ fun main() {
     part2(parseCaveSystem(input))
 
 }
+fun LinkedList<Cave>.copyAndAdd(value: Cave): LinkedList<Cave> {
+    val copy = LinkedList<Cave>()
+    copy.addAll(this)
+    copy.addLast(value)
+    return copy
+}
 
 class Cave(val name: String) {
     val connections = HashSet<Cave>()
@@ -104,6 +108,10 @@ class Cave(val name: String) {
 
     fun isSmallCave(): Boolean {
         return name.uppercase() != name
+    }
+
+    fun isStart(): Boolean {
+        return name == "start"
     }
 
     fun isEnd(): Boolean {

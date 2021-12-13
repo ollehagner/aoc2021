@@ -12,6 +12,8 @@ class Grid<T> {
 
     }
 
+
+
     constructor(values: List<List<T>>) {
         values.forEachIndexed { y, row ->
             row.forEachIndexed { x, value ->
@@ -100,7 +102,11 @@ class Grid<T> {
         val maxY = Optional.ofNullable(data.keys.map { it.y }.maxOf { it }).orElse(0)
         (minY)!!.rangeTo(maxY!!).forEach { y ->
             (minX)!!.rangeTo(maxX!!).forEach { x ->
-                sb.append(valueOf(Point(x, y)).toString())
+                if(hasValue(Point(x,y))) {
+                    sb.append(valueOf(Point(x,y)).toString())
+                } else {
+                    sb.append(".")
+                }
             }
             sb.append("\n")
         }
