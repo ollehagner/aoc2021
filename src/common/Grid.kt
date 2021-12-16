@@ -26,6 +26,10 @@ class Grid<T> {
         return data.size
     }
 
+    fun entries(): Set<Map.Entry<Point, T>> {
+        return data.entries
+    }
+
     fun allPoints() : Set<Point> {
         return data.keys.toSet()
     }
