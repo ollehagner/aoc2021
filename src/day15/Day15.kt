@@ -33,15 +33,16 @@ fun main() {
 
         val firstPath = Path(startpoint, endpoint)
         firstPath.addToPath(startpoint, 0)
-        val pathsToExplore = mutableListOf(firstPath)
+        val pathsToExplore = PriorityQueue<Path>(compareBy { it.cost() })
+        pathsToExplore.offer(firstPath)
         val finished = mutableListOf<Int>()
 
         val cheapestRoute = mutableMapOf<Point, Int>()
 
         while (pathsToExplore.isNotEmpty()) {
-            val currentPath = pathsToExplore.removeFirst()
+            val currentPath = pathsToExplore.poll()
             if (currentPath.isCompleted()) {
-                finished.add(currentPath.cost())
+                return currentPath.cost()
             } else {
                 adjacent(currentPath.currentPoint())
                     .filter { grid.hasValue(it) && !currentPath.contains(it) }
@@ -103,9 +104,8 @@ fun main() {
     val testinputPart2 = readInput("day15/day15_test_part2")
     val input = readInput("day15/day15")
 
-//    part1(input)
+    part1(input)
     part2(input)
-
 
 }
 
