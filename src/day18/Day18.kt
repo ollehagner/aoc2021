@@ -106,21 +106,26 @@ fun main() {
     }
 
     fun part2(numbers: List<String>) {
+        val largestSum = numbers.flatMapIndexed { indexA, a ->
+            numbers.mapIndexed { indexB, b ->
 
+                if (indexA != indexB) Pair(a, b) else null
+            }
+        }
+            .filterNotNull()
+            .map { add(it.first, it.second) }
+            .map { magnitude(it) }
+            .maxOf { it }
+        println("Day 18 part 2. Largest sum of two numbers is $largestSum")
     }
 
     val testinput = readInput("day18/day18_test_3")
     val input = readInput("day18/day18")
 
-//    part1(input)
-    part2(testinput)
+    part1(input)
+    part2(input)
 
 }
 
 data class NumberPart(val index: Int, val value: Char) {
-
-    fun digitValue(): Int {
-        return value.digitToInt()
-    }
-
 }
