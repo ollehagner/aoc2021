@@ -37,11 +37,11 @@ fun main() {
         }
     }
 
-    val ySequence = { startVelocity: Int ->
+    val ySequence = { startVelocity: Int, minPosition: Int ->
         sequence {
             var velocity = startVelocity
             var position = 0
-            while (true) {
+            while (position >= minPosition) {
                 position += velocity
                 yield(position)
                 velocity--
@@ -52,51 +52,46 @@ fun main() {
     fun valuesInXSequence(range: IntRange): List<Int> {
         return infinite(0)
             .dropWhile { gauss(it) < range.first }
-            .takeWhile { it < range.last }
+            .takeWhile { it <= range.last }
             .filter { xSequence(it, range.last).any { position -> position in range } }
             .toList()
     }
 
     fun valuesInYSequence(range: IntRange): List<Int> {
-        return infinite(0)
+        return infinite(range.first)
             .takeWhile { it < abs(range.first) }
-            .filter { ySequence(it).any { position -> position in range } }
+            .filter { ySequence(it, range.first).any { position -> position in range } }
             .toList()
     }
 
 
     fun part1(targetArea: TargetArea) {
-//        val xValues = valuesInXSequence(targetArea.first)
-//        val yValues = valuesInYSequence(targetArea.second)
         val maxY = valuesInYSequence(targetArea.second).maxOf { it }
         println("Day 17 part 1. Max height = ${gauss(maxY)}")
-//        val lastXValueInTargetArea = targetArea.first.last
-//        xSequence(xValues.first(), lastXValueInTargetArea)
-//            .zip(ySequence(3))
-//            .map { (x, y) -> Point(x, y) }
-//            .takeWhile { point -> point.x < targetArea.first.last && point.y > targetArea.second.last }
-//            .forEach { println(it) }
-
     }
 
     fun part2(targetArea: TargetArea) {
         val xValues = valuesInXSequence(targetArea.first)
         val yValues = valuesInYSequence(targetArea.second)
-        println(xValues)
-        println(yValues)
-        println("Size = ${xValues.size * yValues.size}")
+        val count = xValues.flatMap { xVelocity ->
+            yValues.map { yVelocity -> Point(xVelocity, yVelocity) }
+        }
+            .filter { xSequence(it.x, targetArea.first.last).zip(ySequence(it.y, targetArea.second.first)).any { (x, y) -> targetArea.contains(Point(x, y)) } }
+            .count()
+
+        println("Day 17 part 2. Num of valid options = $count")
     }
 
     val testInput = "target area: x=20..30, y=-10..-5"
     val input = readInput("day17/day17").first()
 
     val ranges = ".*x=(-?\\d+)\\.\\.(-?\\d+).*y=(-?\\d+)\\.\\.(-?\\d+)".toRegex()
-    val groups = ranges.matchEntire(testInput)!!.groupValues
+    val groups = ranges.matchEntire(input)!!.groupValues
     val xRange = IntRange(groups[1].toInt(), groups[2].toInt())
     val yRange = IntRange(groups[3].toInt(), groups[4].toInt())
     val targetArea = TargetArea(xRange, yRange)
 
-//    part1(targetArea)
+    part1(targetArea)
     part2(targetArea)
 
 
