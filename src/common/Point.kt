@@ -12,4 +12,17 @@ data class Point(val x: Int, val y: Int) {
             Direction.RIGHT -> Point(x + steps, y)
         }
     }
+
+    fun move(vector: Point): Point {
+        return Point(this.x + vector.x, this.y + vector.y)
+    }
+
+    fun relativeTo(other: Point): Point {
+        return Point(other.x - this.x, other.y - this.y)
+    }
+
+    override fun toString(): String {
+        return "($x,$y)"
+    }
+
 }
