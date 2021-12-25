@@ -12,8 +12,6 @@ class Grid<T> {
 
     }
 
-
-
     constructor(values: List<List<T>>) {
         values.forEachIndexed { y, row ->
             row.forEachIndexed { x, value ->
