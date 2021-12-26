@@ -17,8 +17,8 @@ fun main() {
     }
 
     fun pointsToProcess(min: Point, max: Point): List<Point> {
-        return IntRange(min.y - 2, max.y + 2).flatMap { y ->
-            IntRange(min.x - 2, max.x + 2).map { x ->
+        return IntRange(min.y - 1, max.y + 1).flatMap { y ->
+            IntRange(min.x - 1, max.x + 1).map { x ->
                 Point(x, y)
             }
         }.toList()
