@@ -4,7 +4,7 @@ data class Point(val x: Int, val y: Int) {
     constructor(values: String) :
         this(values.split(",").first().toInt(), values.split(",").last().toInt())
 
-    fun move(direction: Direction, steps: Int) : Point{
+    fun move(direction: Direction, steps: Int = 1) : Point{
         return when(direction) {
             Direction.UP -> Point(x, y + steps)
             Direction.DOWN -> Point(x, y - steps)

@@ -73,6 +73,17 @@ class Grid<T> {
                 }
     }
 
+    fun rowsWithDefault(defaultValue: T): List<List<T>> {
+        val min = min()
+        val max = max()
+        return IntRange(min.y, max.y)
+            .map { y ->
+                IntRange(min.x, max.x)
+                    .map { x -> valueOrDefault(Point(x, y), defaultValue) }
+
+            }
+    }
+
     fun columns(): List<List<T>> {
         val min = min()
         val max = max()
