@@ -22,38 +22,31 @@ fun main() {
     fun solve(start: Burrow): Burrow {
 
         var handledStates = HashMap<Int, Int>()
-        val queue = PriorityQueue<Burrow>(compareBy { it.score })
+        val queue = PriorityQueue<Burrow>(compareBy { it.totalEnergy + it.score })
         queue.add(start)
         var lowestCostBurrow = Burrow(Grid(), Int.MAX_VALUE, start.burrowLayout)
+        var counter = 0
         while (queue.isNotEmpty()) {
+            counter++
+
             val currentBurrow = queue.poll()
+//            println("Energy: " + currentBurrow.totalEnergy)
+//            println("Score: " + currentBurrow.score)
+//            println(currentBurrow)
+            if(currentBurrow.isComplete()) return currentBurrow
+
             handledStates.merge(
                 currentBurrow.toString().hashCode(),
                 currentBurrow.totalEnergy
             ) { oldValue, newValue -> if (newValue < oldValue) newValue else oldValue }
             val newStates = currentBurrow.allPossibleMoves().map { currentBurrow.move(it) }
-            val possibleLowestCostBurrow = newStates.filter { it.isComplete() }
-                .map { state ->
-                    println("Completed with total energy: ${state.totalEnergy}")
-                    println(state)
-                    state
-                }
-                .minByOrNull { it.totalEnergy }
-            if (possibleLowestCostBurrow != null && possibleLowestCostBurrow.totalEnergy < lowestCostBurrow.totalEnergy) {
-                lowestCostBurrow = possibleLowestCostBurrow!!
-                queue.removeIf { it.totalEnergy >= lowestCostBurrow.totalEnergy }
-                handledStates = HashMap(handledStates.filter { entry -> entry.value > lowestCostBurrow.totalEnergy })
+            queue.removeIf { it.totalEnergy > currentBurrow.totalEnergy + currentBurrow.score }
 
-                println("Lowest cost: ${lowestCostBurrow.totalEnergy}")
-            }
             newStates
-                .filter { !it.isComplete() }
                 .filter { newState ->
                     newState.totalEnergy < handledStates.getOrDefault(newState.toString().hashCode(), Int.MAX_VALUE)
                 }
                 .forEach { queue.offer(it) }
-
-
         }
 
         return lowestCostBurrow
@@ -62,6 +55,7 @@ fun main() {
     fun part1(start: Burrow) {
         val startTime = System.currentTimeMillis()
         val lowestCostBurrow = solve(start)
+        lowestCostBurrow.history.forEach { println(it) }
         println("Day 23 part 1. Lowest cost: ${lowestCostBurrow.totalEnergy}")
         println("Finished in ${System.currentTimeMillis() - startTime} ms")
     }
@@ -77,11 +71,13 @@ fun main() {
     val testinputPart1 = readInput("day23/day23_test")
     val testinputPart2 = readInput("day23/day23_part2_test")
     val inputPart1 = readInput("day23/day23")
+    val inputPart2 = readInput("day23/day23_part2")
 
-    val burrow = parseBurrow(testinputPart1)
-//    println(burrow.score)
-    part1(burrow)
-//    part2(burrow)
+    val burrow1 = parseBurrow(inputPart1)
+    val burrow2 = parseBurrow(inputPart2)
+
+    part1(burrow1)
+    part2(burrow2)
 }
 
 class BurrowLayout(grid: Grid<Square>) {
@@ -93,40 +89,51 @@ class BurrowLayout(grid: Grid<Square>) {
     val OUTSIDE_ROOMS = listOf(Point(3, 1), Point(5, 1), Point(7, 1), Point(9, 1))
 }
 
-class Burrow(val grid: Grid<Square>, val totalEnergy: Int, val burrowLayout: BurrowLayout) {
+class Burrow(val grid: Grid<Square>, val totalEnergy: Int, val burrowLayout: BurrowLayout, val history: List<String> = emptyList()) {
 
     val score = amphipods()
         .map { (point, amphipod) ->
             val home = home(amphipod)
             if (point in home) {
-                Point.sequence(home.last(), DOWN).dropWhile { it != point && grid.valueOf(it) == amphipod }
-                    .takeWhile { it != point }
-                    .count()
+                if(atFinalDestination(point, amphipod)) {
+                    0
+                } else {
+                    (point.y - 1) * 2
+                }
             } else {
                 val toHallwayCost = Point.sequence(point, DOWN)
                     .takeWhile { it.y >= 1 }
                     .filter { it != point }
-                    .map { if (grid.valueOf(it) == NOT_OCCUPIED) 1 else 1 }
-                    .sum()
-//                println("To hallway cost $toHallwayCost")
+                    .count()
                 val horizontalDirection = if (point.x < home.last().x) RIGHT else LEFT
                 val horizontalCost = Point.sequence(Point(point.x, 1), horizontalDirection)
                     .drop(1)
                     .takeWhile { it != Point(home.last().x, 1) }
-                    .map { if (grid.valueOf(it) == NOT_OCCUPIED) 1 else 1 }
-                    .sum()
-//                println("Horizontal cost: $horizontalCost")
-                val toDestinationCost = Point.sequence(home.last(), DOWN)
-                    .dropWhile { grid.valueOf(it) == amphipod }
-                    .takeWhile { it.y >= 1 }
-                    .map { if (grid.valueOf(it) == NOT_OCCUPIED) 1 else 1 }
-                    .sum()
-//                println("To destination cost: $toDestinationCost")
+                    .count()
+                val toDestinationCost = 2
                 (toHallwayCost + horizontalCost + toDestinationCost) * amphipod.energy
             }
         }
         .sum()
 
+    fun toDestination(point: Point, amphipod: Amphipod): Set<Point> {
+        val home = home(amphipod)
+        val toHallway = Point.sequence(Point(point.x, point.y - 1), DOWN).takeWhile { it.y >= 1 }
+            .filter { it != point }
+            .toList()
+        val horizontalDirection = if (point.x < home.last().x) RIGHT else LEFT
+        val toOutsideHome = Point.sequence(Point(point.x, 1), horizontalDirection).takeWhile { it.x != home.first().x }
+            .filter { it != point }
+            .toList()
+        val verticalToDestination = Point.sequence(home.last(), DOWN)
+            .dropWhile { grid.valueOf(it) == amphipod }
+            .takeWhile { it.y >= 1 }.toList().reversed()
+        return buildSet {
+            addAll(toHallway)
+            addAll(toOutsideHome)
+            addAll(verticalToDestination)
+        }
+    }
 
     fun amphipods(): List<Pair<Point, Amphipod>> {
         return grid.entries()
@@ -139,8 +146,8 @@ class Burrow(val grid: Grid<Square>, val totalEnergy: Int, val burrowLayout: Bur
         val copy = Grid(grid.rowsWithDefault(NOT_OCCUPIED))
         copy.set(move.to, amphipodToMove)
         copy.set(move.from, NOT_OCCUPIED)
-        val energy = move.steps() * amphipodToMove.energy
-        return Burrow(copy, totalEnergy + energy, burrowLayout)
+        val energy = move.steps * amphipodToMove.energy
+        return Burrow(copy, totalEnergy + energy, burrowLayout, history.plus(grid.toString() + "Energy $energy\n"))
     }
 
     fun home(amphipod: Amphipod): List<Point> {
@@ -164,52 +171,35 @@ class Burrow(val grid: Grid<Square>, val totalEnergy: Int, val burrowLayout: Bur
     fun allPossibleMoves(): List<Move> {
         return amphipods()
             .flatMap { pair ->
-                validMovePoints(pair.first, pair.second)
-                    .map { destination -> Move(pair.first, destination) }
+                validMoves(pair.first, pair.second)
             }
     }
 
-    fun validMovePoints(currentPoint: Point, amphipod: Amphipod): Set<Point> {
+    fun validMoves(currentPoint: Point, amphipod: Amphipod): Set<Move> {
 
         if (atFinalDestination(currentPoint, amphipod)) {
             return emptySet()
         }
 
-        val home = home(amphipod)
-        if (currentPoint in home && grid.valueOf(currentPoint.move(UP)) == NOT_OCCUPIED) {
-            return setOf(currentPoint.move(UP))
+        val pathToDestination = toDestination(currentPoint, amphipod)
+        if (pathToDestination.all { grid.valueOf(it) == NOT_OCCUPIED }) {
+            return setOf(Move(currentPoint, pathToDestination.last(), pathToDestination.count()))
         }
 
-        if (inHallway(currentPoint)) {
-            val pathToHome = IntRange(minOf(currentPoint.x, home.first().x), maxOf(currentPoint.x, home.first().x))
+        if(!inHallway(currentPoint) && IntRange(1, currentPoint.y - 1).all { grid.valueOf(Point(currentPoint.x, it)) == NOT_OCCUPIED}) {
+            val leftMoves = IntRange(1, currentPoint.x - 1).reversed()
                 .map { Point(it, 1) }
-                .filter { it != currentPoint }
-            return if (pathToHome.all { grid.valueOf(it) == NOT_OCCUPIED }
-                && home.all { grid.valueOf(it) in listOf(amphipod, NOT_OCCUPIED) }
-                && grid.valueOf(home.first()) == NOT_OCCUPIED) {
-                setOf(home.first())
-            } else {
-                emptySet()
-            }
+                .takeWhile { grid.valueOf(it) == NOT_OCCUPIED }
+                .filter { it !in burrowLayout.OUTSIDE_ROOMS }
+            val rightMoves = IntRange(currentPoint.x + 1, 11)
+                .map { Point(it, 1) }
+                .takeWhile { grid.valueOf(it) == NOT_OCCUPIED }
+                .filter { it !in burrowLayout.OUTSIDE_ROOMS }
+            return listOf(leftMoves, rightMoves).flatten()
+                .map { to -> Move(currentPoint, to, (abs(currentPoint.x - to.x) + abs(currentPoint.y - to.y))) }
+                .toSet()
         }
-
-        val squareAbove = grid.valueOf(currentPoint.move(DOWN))
-        if (squareAbove != NOT_OCCUPIED) {
-            return emptySet()
-        } else if (squareAbove == NOT_OCCUPIED && currentPoint.move(DOWN) !in burrowLayout.OUTSIDE_ROOMS) {
-            return setOf(currentPoint.move(DOWN))
-        }
-
-        val leftMoves = IntRange(1, currentPoint.x - 1).reversed()
-            .map { Point(it, 1) }
-            .takeWhile { grid.valueOf(it) == NOT_OCCUPIED }
-            .filter { it !in burrowLayout.OUTSIDE_ROOMS }
-        val rightMoves = IntRange(currentPoint.x + 1, 11)
-            .map { Point(it, 1) }
-            .takeWhile { grid.valueOf(it) == NOT_OCCUPIED }
-            .filter { it !in burrowLayout.OUTSIDE_ROOMS }
-        return listOf(leftMoves, rightMoves).flatten().toSet()
-
+        return emptySet()
     }
 
     fun atFinalDestination(point: Point, amphipod: Amphipod): Boolean {
@@ -228,10 +218,7 @@ class Burrow(val grid: Grid<Square>, val totalEnergy: Int, val burrowLayout: Bur
 
 }
 
-data class Move(val from: Point, val to: Point) {
-    fun steps(): Int {
-        return abs(from.x - to.x) + abs(from.y - to.y)
-    }
+data class Move(val from: Point, val to: Point, val steps: Int) {
 }
 
 interface Square {
@@ -258,8 +245,6 @@ enum class Structure(val sign: Char) : Square {
     override fun toString(): String {
         return "$sign"
     }
-
-
 }
 
 enum class Amphipod(val sign: Char, val energy: Int) : Square {
