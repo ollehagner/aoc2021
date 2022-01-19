@@ -80,7 +80,7 @@ enum class Pixel(val symbol: Char, val value: Int) {
             return when (symbol) {
                 '#' -> LIGHT
                 '.' -> DARK
-                else -> throw IllegalArgumentException("Invalid walue")
+                else -> throw IllegalArgumentException("Invalid value $symbol")
             }
         }
     }
